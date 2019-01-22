@@ -1,0 +1,188 @@
+import pygame
+import time
+from random import randint, randrange #imports everything from random
+
+black = (0,0,0)
+white = (255,255,255)
+red = (255,0,0)
+
+sunset = (253,72,47)
+
+greenyellow = (184,255,0)
+brightblue = (47,228,253)
+orange = (255,113,0)
+yellow = (255,236,0)
+purple = (252,67,255)
+
+colorChoices = [greenyellow,brightblue,orange,yellow,purple]
+
+pygame.init()
+
+screenX = 800
+screenY = 500
+
+score = 0
+
+imgHeight = 41
+imgWidth = 76
+
+surface = pygame.display.set_mode((screenX,screenY))
+
+pygame.display.set_caption('Helicopter')
+
+clock = pygame.time.Clock()
+
+img = pygame.image.load('Helicopter.jpg')
+
+def score(count):
+    font = pygame.font.Font('freesansbold.ttf', 20)
+    text = font.render("score: "+str(count), True, white)
+    surface.blit(text, [0,0])
+
+def block(x_block, y_block, block_width, block_height, gap, colorChoice):
+    #drawing in pygame is (where to draw on, color of the shape, ([]=list) [x,y,width,height])
+    #colorChoice = colorChoices[randrange(0,len(colorChoices))]  Rainbow blocks example
+    pygame.draw.rect(surface, colorChoice, [x_block, y_block, block_width, block_height])
+    pygame.draw.rect(surface, colorChoice, [x_block, y_block + block_height + gap, block_width, screenY])
+
+def replay_or_quit():
+    for event in pygame.event.get([pygame.KEYDOWN, pygame.KEYUP, pygame.QUIT]):
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+
+        elif event.type == pygame.KEYDOWN:
+            continue
+
+        return event.key
+
+    return None
+
+def makeTextObjs (text, font):
+    textSurface = font.render(text, True, sunset)
+    return textSurface, textSurface.get_rect()
+
+def msgSurface(text):
+    smallText = pygame.font.Font('freesansbold.ttf', 20)
+    largeText = pygame.font.Font('freesansbold.ttf', 150)
+
+    titleTextSurf, titleTextRect = makeTextObjs(text, largeText)
+    titleTextRect.center = screenX / 2, screenY / 2
+    surface.blit(titleTextSurf, titleTextRect)
+
+    typTextSurf, typTextRect = makeTextObjs('Press Any Key to Continue', smallText)
+    typTextRect.center = screenX / 2, ((screenY / 2)+100)
+    surface.blit(typTextSurf, typTextRect)
+
+    pygame.display.update()
+    time.sleep(1)
+
+    while replay_or_quit    () == None:
+        clock.tick()
+
+    main()
+
+    
+
+def gameOver():
+    msgSurface('Kaboom!')
+
+#Helicopter
+def helicopter(x, y, image) :
+    surface.blit(img, (x,y))
+
+def main():
+    x = 150
+    y = 200
+    y_move = 3 #don't forget to reset this
+
+    x_block = screenX
+    y_block = 0
+
+    block_width = 75
+    #this produces a random height between 0 and the screen height
+    block_height = randint(10,screenY-70)
+    gap = imgHeight * 3
+    block_move = 3
+
+    current_Score = 0
+
+    colorChoice = colorChoices[randrange(0,len(colorChoices))]
+    
+    #Put functions above this
+    game_over = False
+    
+    #game over conditions
+    while not game_over:
+
+    #Movement Conditions
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_over = True
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    print ('up')
+                    y_move = -3
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_UP:
+                    print('down')
+                    y_move = 3
+
+    #constant down pull
+        y += y_move
+
+    #Drawing the screen black + Helicopter
+        surface.fill(black)
+        helicopter(x, y, img)
+
+        
+        block(x_block, y_block, block_width, block_height, gap, colorChoice)
+        score(current_Score)
+        x_block -= block_move #moves the blocks towards the helicopter
+
+        #hitting the ceiling or floor = gameover
+        if y > screenY - imgHeight or y < 0:
+            gameOver()
+
+#delete passed by blocks
+        if x_block < (-1*block_width):
+            x_block = screenX
+            block_height = randint(10, screenY-70)
+            colorChoice = colorChoices[randrange(0,len(colorChoices))]
+            
+#losing by hitting the top block
+        if x + imgWidth > x_block:
+            #score += 1 #scoreboard command
+            if x < x_block + block_width:
+                print ('A')
+                if y < block_height:
+                    print ('B')
+                    if x - imgWidth < block_width + x_block:
+                        print ('C')
+                        gameOver()
+
+        if x < x_block and x > x_block - block_move:
+            current_Score += 1
+            #block_move += 0.2
+            #print ('speed increase by 0.2')
+                        
+#losing by hitting the bottom block                        
+        if x + imgWidth > x_block:
+            print('D')
+            if y + imgHeight > block_height + gap:
+                print('E')
+                if x + imgWidth < x_block + block_width:
+                    print ('F')
+                    gameOver()
+
+        pygame.display.update()
+
+    #frames per second
+        clock.tick(64) 
+
+main()
+pygame.quit()
+quit()
+
